@@ -8,3 +8,11 @@ Otimizar:
 - Probabilidade de mutação
 - População inicial
 - Tamanho da população
+- Número de gerações
+
+Algoritmos:
+- Mutação: Insertion Mutation & ?
+- Cruzamento: Position Based Crossover & ?
+- Seleção: ? e ?
+
+State of the art: ?

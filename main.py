@@ -1,7 +1,7 @@
 import math
 import random as random
 import bisect
-
+from matplotlib import pyplot as plt
 
 def genetic_algorithm(population, fn_fitness, gene_pool, mutation, recombine, fn_thres=None, ngen=1000, pmut=0.1):
     # for each generation
@@ -130,12 +130,12 @@ class EvaluateTSM:
             if origin is None:
                 origin = city
             else:
-                distance += euclidean_distance(self.problem_instance[origin - 1], self.problem_instance[city - 1])
+                distance += euclidean_distance(self.problem_instance[origin], self.problem_instance[city])
             origin = city
             visited.append(city)
 
         #voltar
-        distance += euclidean_distance(self.problem_instance[origin - 1], self.problem_instance[solution[0] - 1])
+        distance += euclidean_distance(self.problem_instance[origin], self.problem_instance[solution[0]])
         return 100000 - distance
 
 
@@ -187,6 +187,27 @@ def position_based_crossover(x, y):
             new_x.insert(position, y[position])
 
     return new_x, new_y
+
+
+def plot(instance, solution):
+    plt.rcParams["figure.autolayout"] = True
+    plt.grid()
+    plt.title("Traveling salesman")
+    for city in tsm_instance:
+        plt.plot(city[1], city[2], marker="o", markersize=3, markeredgecolor="red", markerfacecolor="red")
+
+    origin = None
+    for city in solution:
+        if origin is not None:
+            plt.plot([tsm_instance[origin][1], tsm_instance[city][1]],
+                     [tsm_instance[origin][2], tsm_instance[city][2]],
+                     color="black")
+        origin = city
+    plt.plot([tsm_instance[origin][1], tsm_instance[solution[0]][1]],
+             [tsm_instance[origin][2], tsm_instance[solution[0]][2]],
+             color="blue")
+
+    plt.show()
 
 
 tsm_instance = [[1, 37.0, 52.0],
@@ -249,18 +270,19 @@ fn_fitness = EvaluateTSM(tsm_instance)
 
 individual_length = len(fn_fitness.problem_instance)
 
-possible_values = range(1, individual_length)
+possible_values = range(0, individual_length)
 
-population_size = 15
+population_size = 20
 
-threshold = fn_fitness(possible_values) + 500
-
+#threshold = fn_fitness(possible_values)
+#print("threshold", threshold)
+threshold = 99500
 
 # initial population
 population = init_population(population_size, possible_values, individual_length)
 
 # run the algoritm
-solution = genetic_algorithm(population, fn_fitness, gene_pool=possible_values,
+solution = genetic_algorithm(population, fn_fitness, gene_pool=possible_values, ngen=2000,
                              fn_thres=threshold, mutation=insertion_mutation, recombine=position_based_crossover)
 
 # print the results
@@ -273,5 +295,4 @@ for city in solution:
     else:
         visited.append(city)
 
-#print(position_based_crossover([1, 2, 3], [3, 2, 1]))
-#print(insertion_mutation(list(possible_values), possible_values, 1))
+plot(tsm_instance, solution)
