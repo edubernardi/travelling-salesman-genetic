@@ -1,0 +1,10 @@
+É melhor iniciar a população com vários individuos válidos, iguais, do que uma totalmente aleatório, porque isso
+diminui o número de repetições na resposta
+
+Otimizar:
+- Tamanho da população
+- Threshold/Critério de parada
+- Preço para cada cidade revisitada
+- Probabilidade de mutação
+- População inicial
+- Tamanho da população
