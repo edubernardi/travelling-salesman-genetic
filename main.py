@@ -3,7 +3,9 @@ import random as random
 import bisect
 from matplotlib import pyplot as plt
 
-def genetic_algorithm(population, fn_fitness, gene_pool, mutation, recombine, fn_thres=None, ngen=1000, pmut=0.1):
+
+def genetic_algorithm(population, fn_fitness, gene_pool, mutation, recombine, selection, fn_thres=None, ngen=1000,
+                      pmut=0.1):
     # for each generation
     for i in range(ngen):
 
@@ -13,7 +15,7 @@ def genetic_algorithm(population, fn_fitness, gene_pool, mutation, recombine, fn
         # repeat to create len(population) individuals
         for i in range(len(population)):
             # select the parents
-            p1, p2 = select(2, population, fn_fitness)
+            p1, p2 = selection(2, population, fn_fitness)
 
             # recombine the parents, thus producing the child
             child_x, child_y = recombine(p1, p2)
@@ -103,8 +105,8 @@ def init_population(pop_number, gene_pool, state_length):
     for i in range(pop_number):
         # each individual is represented as an array with size state_length,
         # where each position contains a value from gene_pool selected at random
-        #new_individual = [gene_pool[random.randrange(0, g)] for j in range(state_length)]
-        new_individual = list(gene_pool).copy()
+        # new_individual = [gene_pool[random.randrange(0, g)] for j in range(state_length)]
+        new_individual = random.sample(list(gene_pool), len(gene_pool))
         population.append(new_individual)
 
     return population
@@ -126,7 +128,7 @@ class EvaluateTSM:
         visited = []
         for city in solution:
             if city in visited:
-                distance += 500
+                distance += 0
             if origin is None:
                 origin = city
             else:
@@ -134,7 +136,7 @@ class EvaluateTSM:
             origin = city
             visited.append(city)
 
-        #voltar
+        # voltar
         distance += euclidean_distance(self.problem_instance[origin], self.problem_instance[solution[0]])
         return 100000 - distance
 
@@ -151,12 +153,26 @@ def insertion_mutation(x, gene_pool, pmut):
     n = len(x)
     c = random.randrange(0, n)  # gene to be inserted
 
-
     value = x.pop(c)
     p = random.randrange(0, n - 1)  # insertion position
     x.insert(p, value)
 
     return x
+
+
+def simple_inversion_mutation(x, gene_pool, pmut):
+    if random.random() >= pmut:
+        return x
+
+    cutoff_lower = int(random.randrange(1, len(x)))
+    cutoff_upper = int(random.randrange(cutoff_lower, len(x)))
+
+    sublist = x[cutoff_lower: cutoff_upper]
+    sublist.reverse()
+
+    if len(x[0:cutoff_lower] + sublist + x[cutoff_upper:]) > 51:
+        print("Deu ruim")
+    return x[0:cutoff_lower] + sublist + x[cutoff_upper:]
 
 
 def position_based_crossover(x, y):
@@ -189,13 +205,87 @@ def position_based_crossover(x, y):
     return new_x, new_y
 
 
+def partially_mapped_crossover(x, y):
+    cutoff_lower = int(random.randrange(1, len(x)))
+    cutoff_upper = int(random.randrange(cutoff_lower, len(x)))
+
+    new_x, new_y = [-1] * len(x), [-1] * len(x)
+    for i in range(cutoff_lower, cutoff_upper):
+        new_x[i] = y[i]
+        new_y[i] = x[i]
+
+    for i in range(0, len(x)):
+        if i < cutoff_lower or i >= cutoff_upper:
+            if x[i] not in new_x:
+                new_x[i] = x[i]
+            else:
+                value = x[i]
+                while new_x[i] == -1:
+                    index = new_x.index(value)
+                    if x[index] not in new_x:
+                        new_x[i] = x[index]
+                    else:
+                        value = x[index]
+
+            if y[i] not in new_y:
+                new_y[i] = y[i]
+            else:
+                value = y[i]
+                while new_y[i] == -1:
+                    index = new_y.index(value)
+                    if y[index] not in new_y:
+                        new_y[i] = y[index]
+                    else:
+                        value = y[index]
+
+    return new_x, new_y
+
+
+# def stochastic_universal_sampling(r, population, fn_fitness):
+#    fitnesses = map(fn_fitness, population)
+#    sampler = weighted_sampler(population, fitnesses)
+#    return [sampler() for i in range(r)]
+
+
+def tournament(r, population, fn_fitness):
+    fitnesses = list(map(fn_fitness, population))
+
+    n = len(population)
+    k = 8
+
+    players = []
+    while len(players) < k:
+        player = random.randrange(0, n)
+        if player not in players:
+            players.append(player)
+
+    winners = []
+    while len(winners) < r:
+        winner = tournament_round(players, fitnesses)
+        winners.append(population[winner])
+    return winners
+
+
+def tournament_round(players, fitnesses):
+    if len(players) <= 1:
+        return players[0]
+    if len(players) == 2:
+        if fitnesses[players[0]] > fitnesses[players[1]]:
+            return players[0]
+        else:
+            return players[1]
+    if len(players) > 1:
+        return tournament_round([tournament_round(players[0: int(len(players) / 2)], fitnesses),
+                                 tournament_round(players[int(len(players) / 2): int(len(players))], fitnesses)],
+                                fitnesses)
+
+
 def plot(instance, solution):
     plt.rcParams["figure.autolayout"] = True
     plt.grid()
     plt.title("Traveling salesman")
     for city in tsm_instance:
         plt.plot(city[1], city[2], marker="o", markersize=3, markeredgecolor="red", markerfacecolor="red")
-
     origin = None
     for city in solution:
         if origin is not None:
@@ -262,28 +352,21 @@ tsm_instance = [[1, 37.0, 52.0],
                 [50, 56.0, 37.0],
                 [51, 30.0, 40.0]]
 
-cidade = [[1, 6.0, 4.0],
-        [2, 15.0, 15.0],
-        [3, 24.0, 18.0]]
-
 fn_fitness = EvaluateTSM(tsm_instance)
 
 individual_length = len(fn_fitness.problem_instance)
 
 possible_values = range(0, individual_length)
 
-population_size = 20
-
-#threshold = fn_fitness(possible_values)
-#print("threshold", threshold)
-threshold = 99500
+population_size = 15
 
 # initial population
 population = init_population(population_size, possible_values, individual_length)
 
-# run the algoritm
-solution = genetic_algorithm(population, fn_fitness, gene_pool=possible_values, ngen=2000,
-                             fn_thres=threshold, mutation=insertion_mutation, recombine=position_based_crossover)
+# run the algorithm
+solution = genetic_algorithm(population, fn_fitness, gene_pool=possible_values, ngen=1000,
+                             fn_thres=99500, mutation=simple_inversion_mutation, selection=tournament,
+                             recombine=partially_mapped_crossover)
 
 # print the results
 print('Resulting solution: %s' % solution)

@@ -4,15 +4,16 @@ diminui o número de repetições na resposta
 Otimizar:
 - Tamanho da população
 - Threshold/Critério de parada
-- Preço para cada cidade revisitada
+- Preço para cada cidade revisitada: Não é necessário se os algoritmos de mutação e crossover n permitirem repetição
 - Probabilidade de mutação
-- População inicial
+- População inicial: Embaralhamento da base genética
 - Tamanho da população
 - Número de gerações
+- Número de rounds do torneio
 
 Algoritmos:
-- Mutação: Insertion Mutation & ?
-- Cruzamento: Position Based Crossover & ?
-- Seleção: ? e ?
+- Mutação: Insertion Mutation & Simple Inversion Mutation
+- Cruzamento: Position Based Crossover & Partially Mapped Crossover
+- Seleção: Tournament e ?
 
 State of the art: ?
