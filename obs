@@ -14,6 +14,6 @@ Otimizar:
 Algoritmos:
 - Mutação: Insertion Mutation & Simple Inversion Mutation
 - Cruzamento: Position Based Crossover & Partially Mapped Crossover
-- Seleção: Tournament e ?
+- Seleção: Tournament e Ranking Selection
 
 State of the art: ?
