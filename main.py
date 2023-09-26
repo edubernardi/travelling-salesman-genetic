@@ -55,16 +55,6 @@ def fitness_threshold(fn_fitness, fn_thres, population):
 
     return None
 
-
-# genetic operator for selection of individuals;
-# this function implements roulette wheel selection, where individuals with
-# higher fitness are selected with higher probability
-def select(r, population, fn_fitness):
-    fitnesses = map(fn_fitness, population)
-    sampler = weighted_sampler(population, fitnesses)
-    return [sampler() for i in range(r)]
-
-
 # return a single sample from seq; the probability of a sample being returned
 # is proportional to its weight
 def weighted_sampler(seq, weights):
@@ -106,9 +96,6 @@ def init_population(pop_number, gene_pool, state_length):
     g = len(gene_pool)
     population = []
     for i in range(pop_number):
-        # each individual is represented as an array with size state_length,
-        # where each position contains a value from gene_pool selected at random
-        # new_individual = [gene_pool[random.randrange(0, g)] for j in range(state_length)]
         new_individual = random.sample(list(gene_pool), len(gene_pool))
         population.append(new_individual)
 
@@ -120,12 +107,9 @@ def init_population(pop_number, gene_pool, state_length):
 # in consideration, we created this class to store the problem instance and to
 # allow the evaluation to be performed without having the problem instance at hand
 class EvaluateTSM:
-    # during initialization, store the problem instance
     def __init__(self, problem_instance):
         self.problem_instance = problem_instance
 
-
-    # compute the value of the received solution
     def __call__(self, solution):
         distance = 0
         origin = None
@@ -140,9 +124,9 @@ class EvaluateTSM:
             origin = city
             visited.append(city)
 
-        # voltar
+        # voltar a cidade de início
         distance += euclidean_distance(self.problem_instance[origin], self.problem_instance[solution[0]])
-        return 10000000 - distance
+        return 1 / distance * 10000
 
 
 def euclidean_distance(origin, destiny):
@@ -669,19 +653,18 @@ pr152 = [[1, 2100.0, 1850.0],
 
 
 instances = [eli51, berlin52, rat99, pr152]
-f = open("stats.txt", 'w')
-for i in range(8, 21, 1):
-    fn_fitness = EvaluateTSM(eli51)
+
+for instance in instances:
+    fn_fitness = EvaluateTSM(instance)
 
     individual_length = len(fn_fitness.problem_instance)
 
     possible_values = range(0, individual_length)
 
-    population_size = 15
+    population_size = 8
 
-    threshold = fn_fitness(possible_values) * 1.5
+    threshold = fn_fitness(possible_values) * 10
     print(threshold)
-
     # initial population
     population = init_population(population_size, possible_values, individual_length)
 
@@ -689,13 +672,11 @@ for i in range(8, 21, 1):
     # run the algorithm
     solution = genetic_algorithm(population, fn_fitness, gene_pool=possible_values, ngen=3000,
                                  fn_thres=threshold, mutation=simple_inversion_mutation, selection=tournament_selection,
-                                 recombine=position_based_crossover)
+                                 recombine=partially_mapped_crossover, pmut=10/100)
     end = time.perf_counter_ns()
-    line = str(i) + "," + str((end - start) / 1000000000) + "," + str(fn_fitness(solution)) + "," + "\n"
-    f.write(line)
     # print the results
-    print('Resulting solution: %s' % solution)
-    print('Value of resulting solution: %d' % fn_fitness(solution))
+    print('Resulting solution:', solution)
+    print('Value of resulting solution', fn_fitness(solution))
     print('Execution time:', str((end - start) / 1000000000))
     visited = []
     for city in solution:
@@ -703,7 +684,4 @@ for i in range(8, 21, 1):
             print("repetida:", city)
         else:
             visited.append(city)
-
-
-
-#plot(fn_fitness.problem_instance, solution)
+    plot(fn_fitness.problem_instance, solution)

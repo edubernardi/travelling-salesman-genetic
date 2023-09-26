@@ -2,14 +2,12 @@
 diminui o número de repetições na resposta
 
 Otimizar:
-- Tamanho da população
+- Tamanho da população: 8 é bom
 - Threshold/Critério de parada
 - Preço para cada cidade revisitada: Não é necessário se os algoritmos de mutação e crossover n permitirem repetição
-- Probabilidade de mutação
+- Probabilidade de mutação: 10% é o ideal
 - População inicial: Embaralhamento da base genética
-- Tamanho da população
-- Número de gerações
-- Número de rounds do torneio
+- Número de gerações: 3000 é o sweetspot
 
 Algoritmos:
 - Mutação: Insertion Mutation & Simple Inversion Mutation
